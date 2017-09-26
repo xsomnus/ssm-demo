@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+
+
+    <context:property-placeholder location="classpath:jdbc.properties" />
+    <bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource">
+        <!--配置连接池的基本属性-->
+        <property name="driverClassName" value="${driver}" />
+        <property name="url" value="${url}" />
+        <property name="username" value="${username}" />
+        <property name="password" value="${password}" />
+        <!--dbcp2连接池的私有属性-->
+
+        <property name="maxTotal" value="30" />
+        <property name="maxWaitMillis" value="1000" />
+        <property name="maxIdle" value="100" />
+        <property name="removeAbandonedTimeout" value="300" />
+        <property name="testOnBorrow" value="true" />
+        <property name="logAbandoned" value="true" />
+        <property name="defaultAutoCommit" value="true" />
+    </bean>
+
+    <!--
+        Java现在的流行的一个思想: 约定大于配置
+    -->
+
+    <!--3. 配置SqlSessionFactory对象-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 注入数据库连接池 -->
+        <property name="dataSource" ref="dataSource" />
+        <!-- 配置MyBatis全局配置文件 -->
+        <property name="configLocation" value="classpath:mybatis-config.xml" />
+        <!-- 扫描entity包, 使用别名;
+            当有多个包的时候, 使用分号给他分开
+            org.ssm.entity;org.ssm.entity2;org.ssm.entity3
+         -->
+        <property name="typeAliasesPackage" value="org.ssm.entity" />
+        <!-- 扫描sql配置文件: mapper需要的xml文件
+            和扫描entity包一样, 该配置支持扫描多个配置文件
+        -->
+        <property name="mapperLocations" value="classpath:mapper/*.xml" />
+
+    </bean>
+
+    <!-- 4. 配置扫描Dao接口包, 目的是动态实现Dao接口, 并注入到Spring容器中-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 注入sqlSessionFactory-->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+        <!-- 给出需要扫描Dao接口包-->
+        <property name="basePackage" value="org.ssm.dao" />
+    </bean>
+</beans>
